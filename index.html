@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Knockout-Widgets</title>
+</head>
+<body>
+    <div class="container-fluid narrow">
+        <div style="background: red; width: 50%; margin: 1em auto">
+            <div id="drag" data-bind="slider: rating" style="width: 50px; height: 50px; background: purple"></div>
+            <input type="text" data-bind="value: rating"/>
+        </div>
+    </div>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/knockout/2.2.1/knockout-min.js"></script>
+    <script type="text/javascript" src="js/knockout.widgets.jquery.exteneders.js"></script>
+    <script type="text/javascript" src="js/knockout.widgets.js"></script>
+    <script type="text/javascript">
+        function ViewModel(){
+            var self = this;
+
+            self.rating = ko.observable(.5);
+        }
+
+        ko.applyBindings(window.app = new ViewModel());
+    </script>
+</body>
+</html>
