@@ -1,4 +1,4 @@
-knockout-widgets
+[knockout-widgets]((http://brigand.github.io/knockout-widgets/))
 ================
 
 ### easy to insert widgets for KnockoutJS
