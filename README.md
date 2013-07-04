@@ -29,7 +29,7 @@ Write your `ViewModel` code.  For example:
 
 Include the data bindings in your view.
 
-<div class="slider">
+    <div class="slider">
         <img data-bind="slider: simplicity" class="target"
                   src="checkmark.gif" />
     </div>
