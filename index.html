@@ -2,26 +2,80 @@
 <html>
 <head>
     <title>Knockout-Widgets</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="css/knockout.widgets.doc.css"/>
 </head>
 <body>
-    <div class="container-fluid narrow">
-        <div style="background: red; width: 50%; margin: 1em auto">
-            <div id="drag" data-bind="slider: rating" style="width: 50px; height: 50px; background: purple"></div>
-            <input type="text" data-bind="value: rating"/>
+<div class="container-fluid row-fluid">
+    <div class="span8 offset2">
+        <header>
+            <h1 data-bind="style: {fontSize: titleSize() + 'px'}">Knockout Widgets</h1>
+        </header>
+
+        <hr data-bind="style: {borderWidth: titleSize() - 22 + 'px'}">
+
+        <h3>Awesome Sliders</h3>
+
+        <div class="row-fluid">
+            <div class="slider">
+                <div data-bind="slider: titleSize, sliderMin: 12, sliderMax: 72, round: true" class="handle"></div>
+            </div>
+        </div>
+        <div class="row-fluid">
+<pre class="prettyprint span12">
+&lt;div class="slider">
+    &lt;div data-bind="slider: titleSize, sliderMin: 12, sliderMax: 72, round: true" class="handle">&lt;div>
+&lt;/div>
+</pre>
+<pre class="prettyprint span12">
+function ViewModel(){
+    var self = this;
+
+    self.titleSize = ko.observable(22);
+}
+
+ko.applyBindings(window.app = new ViewModel());
+</pre>
+        </div>
+
+        <div class="row-fluid">
+            <div class="btn btn-large span3" data-bind="click: showCode.toggle(), css: {'btn-success': showCode}">Show Code?
+            </div>
+            <h3 class="span6 text-center">--</h3>
+
+            <h3 class="span3 text-right"> Easy Toggles</h3>
+        </div>
+        <div class="row-fluid" data-bind="if: showCode">
+            <pre class="prettyprint span12">
+&lt;div
+    class="btn btn-large span3"
+    data-bind="click: showCode.toggle(), css: {active: showcode}">
+    Show Code?
+&lt;/div>
+</pre>
+        </div>
+        <div class="row-fluid" data-bind="if: showCode">
+      <pre class="prettyprint span12">
+self.showCode = ko.observable(false);
+      </pre>
         </div>
     </div>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/knockout/2.2.1/knockout-min.js"></script>
-    <script type="text/javascript" src="js/knockout.widgets.jquery.exteneders.js"></script>
-    <script type="text/javascript" src="js/knockout.widgets.js"></script>
-    <script type="text/javascript">
-        function ViewModel(){
-            var self = this;
+</div>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/knockout/2.2.1/knockout-min.js"></script>
+<script type="text/javascript" src="js/knockout.widgets.jquery.exteneders.js"></script>
+<script type="text/javascript" src="js/knockout.fn.widgets.js"></script>
+<script type="text/javascript" src="js/knockout.widgets.js"></script>
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+<script type="text/javascript">
+    function ViewModel() {
+        var self = this;
 
-            self.rating = ko.observable(.5);
-        }
+        self.titleSize = ko.observable(22);
+        self.showCode = ko.observable(false);
+    }
 
-        ko.applyBindings(window.app = new ViewModel());
-    </script>
+    ko.applyBindings(window.app = new ViewModel());
+</script>
 </body>
 </html>
