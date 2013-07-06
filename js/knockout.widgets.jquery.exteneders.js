@@ -16,6 +16,8 @@
         var $parent = opt.parent === -1 ? $el.parent() : $(opt.parent);
         var $document = $(document);
 
+        $el.offset({left: 0});
+
         return $el.on("mousedown", function (e) {
             $family = $($el, $el.parents());
             $document.one("mouseup", function () {
