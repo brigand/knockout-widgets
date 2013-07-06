@@ -9,3 +9,15 @@ ko.observable.fn.toggle = function(){
         observable(!observable());
     });
 };
+
+ko.subscribable.fn.append = function(what){
+    var observable = this;
+    return ko.computed(function(){
+        return observable() + what;
+    });
+};
+
+ko.debug = function(a, b, c, d){
+    console.log("DEBUG", a, b, c, d);
+    return '';
+};
