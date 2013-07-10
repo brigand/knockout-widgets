@@ -99,18 +99,18 @@ ko.bindingHandlers.slideSelect = {
                         if (node === selected) {
                             selectedData = index;
                         }
-                    })
+                    });
 
                     if (typeof selectedData === "undefined") {
                         console.warn('slideSelect failed to find a element index matching the selection');
                     }
                 }
                 else {
-                    kselectedData = ko.dataFor(selected);
+                    selectedData = ko.dataFor(selected);
                 }
                 if (typeof selected !== "undefined") {
                     // Update the value, this causes snapping as per the update method
-                    if (selectedData !== lastValue) {
+                    if (typeof selectedData !== 'undefined' && selectedData !== lastValue) {
                         observable(selectedData);
                     }
 
@@ -126,6 +126,9 @@ ko.bindingHandlers.slideSelect = {
                 lastValue = observable();
             }
         });
+
+        // Call update once to initialize it to the default scroll
+        ko.bindingHandlers.slideSelect.update.apply(null, args);
     },
     update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         var observable = valueAccessor(), value = unwrap(observable), bindings = allBindingsAccessor(),
@@ -158,19 +161,17 @@ ko.bindingHandlers.slideSelect = {
 
 
         if ($selected) {
-            setTimeout(function(){
-                $element.draggable("disable");
-                var $parent = $element.parent(),
-                    size = ( axis === 'x' ? $parent.width() : $parent.height() ),
-                    childSize = ( axis === 'x' ? $selected.width() : $selected.height() ),
-                    leftEdge = $element.offset()[whichOffset] - $selected.offset()[whichOffset],
-                    newPosition = (size - childSize) / 2 + leftEdge,
-                    style = {};
-                style[whichOffset] = newPosition;
+            $element.draggable("disable");
+            var $parent = $element.parent(),
+                size = ( axis === 'x' ? $parent.width() : $parent.height() ),
+                childSize = ( axis === 'x' ? $selected.width() : $selected.height() ),
+                leftEdge = $element.offset()[whichOffset] - $selected.offset()[whichOffset],
+                newPosition = (size - childSize) / 2 + leftEdge,
+                style = {};
+            style[whichOffset] = newPosition;
 
-                $element.animate(style);
-                $element.draggable("enable");
-            }, 0);
+            $element.stop().animate(style);
+            $element.draggable("enable");
         }
         else {
             console.warn("slideSelect couldn't focus a child element");
