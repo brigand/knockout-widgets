@@ -36,3 +36,32 @@ body, html {
 .prettyprint {
     white-space: pre-wrap !important;
 }
+
+.slideselect.h {
+    overflow-x: hidden;
+}
+
+.slideselect.v {
+    overflow-y: hidden;
+}
+
+.slideable {
+    position: relative;
+    width: 10000%;
+}
+
+.twobytwo {
+    width: 200px;
+    height: 200px;
+    display: inline-block;
+    box-shadow: inset 0 0 5px gray;
+    color: white;
+    box-sizing: border-box;
+    padding-top: .6em;
+    text-align: center;
+    float: left;
+}
+
+.twobytwo:last-child {
+    clear: right;
+}
