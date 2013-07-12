@@ -58,12 +58,44 @@
 
         $el.trigger("mouseup");
 
-        $el.animate({
+        return $el.animate({
             left: newLeft
         }, speed);
     }
-})
-    (jQuery);
+
+    /**
+     * bind before all other handlers
+     * used to avoid some otherwise unavoidable conflicts internally
+     * jQuery recommends against this, because it uses an undocumented API
+     * it should be compatible with 1.4.8 through 2.0.X, but no garentee
+     * @param name The event to watch for, e.g., 'click'
+     * @param fn The callback function, works like any jQuery callback
+     * @returns {*}
+     */
+    $.fn.bindFirst = function(name, fn) {
+        var handlers;
+        // bind as you normally would
+        // don't want to miss out on any jQuery magic
+        this.bind(name, fn);
+
+        // Thanks to a comment by @Martin, adding support for
+        // namespaced events too.
+        if (typeof $._data === 'function') {
+            handlers = $._data(this, 'events')[name.split('.')[0]];
+        }
+        else {
+            handlers = this.data('events')[name.split('.')[0]];
+        }
+
+        // take out the handler we just inserted from the end
+        var handler = handlers.pop();
+
+        // move it to the beginning
+        handlers.splice(0, 0, handler);
+
+        return this;
+    };
+})(jQuery);
 ko.widgets = ko.widgets || {};
 
 ko.widgets.once = function(callback){
@@ -111,14 +143,79 @@ ko.debug = function(a, b, c, d){
     console.log("DEBUG", a, b, c, d);
     return '';
 };
-var unwrap = ko.utils.unwrapObservable;
-var identity = function(x) { return x; };
+
+
+ko.subscribable.fn.set = function(to){
+    var observable = this;
+
+    return function(){
+        observable(
+            // Unwrap so observable.set(otherObservable) works
+            ko.utils.unwrapObservable(to)
+        );
+    };
+};
+
+ko.subscribable.fn.eq = function(to) {
+    var observable = this;
+    return ko.computed(function(){
+        return ko.utils.unwrapObservable(observable) === ko.utils.unwrapObservable(to);
+    });
+};
+
+ko.observableArray.fn.append = function(what) {
+    var self = this;
+    return function(){
+        self.push(ko.utils.unwrapObservable(what));
+    };
+};
+
+ko.observableArray.fn.delete = function(what) {
+    var self = this;
+    return function(){
+        self.remove(ko.utils.unwrapObservable(what));
+    };
+};
+
+/**
+ * When this observable changes, we pretend the targets have too
+ * @param target an observable, array of observables, or object containing observables; observable arrays are not recursed
+ * @param maxDepth the maximum number of recursions, defaults to 3
+ * @param delay the number of miliseconds to wait before notifying the subscribers they've mutated
+ */
+ko.subscribable.fn.infulences = function(target, maxDepth, delay) {
+    var self = this;
+    if (arguments.length < 2) maxDepth = 3;
+
+    // Observable
+    if (ko.isObservable(target)){
+        if (typeof delay !== "undefined" && parseInt(delay)) {
+            self.subscribe(function(){
+                delay = parseInt(delay);
+                setTimeout(target.notifySubscribers.bind(target), delay)
+            });
+        } else {
+            self.subscribe(target.notifySubscribers.bind(target));
+        }
+    }
+    // Array or Object
+    else if (typeof target === 'object' && maxDepth > 0) {
+        $.each(target, function(index, t) {
+            self.infulences(t, maxDepth - 1);
+        });
+    }
+
+    return self;
+};var unwrap = ko.utils.unwrapObservable;
+var identity = function (x) {
+    return x;
+};
 
 /* Simple slider
 
  */
 ko.bindingHandlers.slider = {
-    init: function(element, valueAccessor, allBindingsAccessor) {
+    init: function (element, valueAccessor, allBindingsAccessor) {
         var value = valueAccessor(),
             allBindings = allBindingsAccessor(),
             min = unwrap(allBindings.sliderMin) || 0,
@@ -134,12 +231,12 @@ ko.bindingHandlers.slider = {
         element.dataset.protected = false;
 
         $(element).slideable({
-            callback: function(newPercent){
-                valueAccessor()((max-min) * newPercent + min);
+            callback: function (newPercent) {
+                valueAccessor()((max - min) * newPercent + min);
             }
         });
     },
-    update: function(element, valueAccessor, allBindingsAccessor) {
+    update: function (element, valueAccessor, allBindingsAccessor) {
         var value = valueAccessor(),
             allBindings = allBindingsAccessor(),
             min = unwrap(allBindings.sliderMin) || 0,
@@ -153,7 +250,7 @@ ko.bindingHandlers.slider = {
             round = round ? Math.round : identity;
 
         // Don't update if we're sliding
-        if(element.dataset.protected === "true") {
+        if (element.dataset.protected === "true") {
             return;
         }
 
@@ -164,21 +261,144 @@ ko.bindingHandlers.slider = {
     }
 };
 
+ko.bindingHandlers.slideSelect = {
+    init: function (element, valueAccessor, allBindingsAccessor) {
+        var observable = valueAccessor(), value = unwrap(observable), bindings = allBindingsAccessor(),
+            $element = $(element), axis = 'y', whichOffset = 'top', args = arguments, lastValue;
+
+        if (typeof bindings.axis !== "undefined" && unwrap(bindings.axis) === 'x') {
+            axis = unwrap(bindings.axis);
+            whichOffset = 'left';
+        }
+
+        // Save the last value, and fake a call to update if it didn't change, but the user dragged
+        lastValue = null;
+
+        $element.draggable({
+            axis: axis,
+            stop: function () {
+                var selected, selectedCenter, selectedData,
+                    $parent = $element.parent(), parentPos = $parent.offset()[whichOffset],
+                    parentCenter = ( axis === 'x' ? $parent.width() : $parent.height() ) / 2 + parentPos;
+
+                $element.children().each(function (index, child) {
+                    var $child = $(child), childPos = $child.offset()[whichOffset],
+                        childCenter = ( axis === 'x' ? $child.width() : $child.height() ) / 2 + childPos;
+
+
+                    // Find the child whos center is closest to the parent's center
+                    if (typeof selectedCenter !== "undefined") {
+                        if(Math.abs(childCenter - parentCenter) < Math.abs(selectedCenter - parentCenter)){
+                            selected = child;
+                            selectedCenter = childCenter;
+                        }
+                    }
+                    else {
+                        selected = child;
+                        selectedCenter = childCenter;
+                    }
+                });
+
+                // A new item is selectd, so we mark it as selected
+
+                // Number values will recieve the index of the selected node
+                if (typeof value === "number") {
+                    $.each(selected.parentNode.children, function(index, node) {
+                        if (node === selected) {
+                            selectedData = index;
+                        }
+                    });
+
+                    if (typeof selectedData === "undefined") {
+                        console.warn('slideSelect failed to find a element index matching the selection');
+                    }
+                }
+                else {
+                    selectedData = ko.dataFor(selected);
+                }
+                if (typeof selected !== "undefined") {
+                    // Update the value, this causes snapping as per the update method
+                    if (typeof selectedData !== 'undefined' && selectedData !== lastValue) {
+                        observable(selectedData);
+                    }
+
+                    // If the value hasn't changed; fake a call to update
+                    else {
+                        ko.bindingHandlers.slideSelect.update.apply(null, args);
+                    }
+                }
+                else {
+                    console.warn("slideSelect couldn't identify any children")
+                }
+
+                lastValue = observable();
+            }
+        });
+    },
+    update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        var observable = valueAccessor(), value = unwrap(observable), bindings = allBindingsAccessor(),
+            $element = $(element), axis = 'y', whichOffset = 'top', newPosition, $selected;
+
+        if (typeof bindings.axis !== "undefined" && bindings.axis === 'x') {
+            axis = bindings.axis;
+            whichOffset = 'left';
+        }
+
+
+        if (typeof value === 'number') {
+            $selected = $($element.children().get(value));
+            if ($selected.length !== 1) $selected = null;
+        }
+
+        else if (bindingContext.foreach) {
+            var index = bindingContext.foreach.indexOf(value);
+            if (index !== -1) {
+                $selected = $($element.children().get(index));
+            }
+        }
+        else {
+            $element.children().each(function (index, child) {
+                if (ko.dataFor(child) === unwrap(value)) {
+                    $selected = $(child);
+                }
+            });
+        }
+
+
+        if ($selected) {
+            $element.draggable("disable");
+            var $parent = $element.parent(),
+                size = ( axis === 'x' ? $parent.width() : $parent.height() ),
+                childSize = ( axis === 'x' ? $selected.width() : $selected.height() ),
+                leftEdge = $element.offset()[whichOffset] - $selected.offset()[whichOffset],
+                newPosition = (size - childSize) / 2 + leftEdge,
+                style = {};
+            style[whichOffset] = newPosition;
+
+            $element.stop().animate(style);
+            $element.draggable("enable");
+        }
+        else {
+            console.warn("slideSelect couldn't focus a child element");
+        }
+    }
+};
+
 ko.bindingHandlers.slideVisible = visibility($.prototype.slideDown, $.prototype.slideUp);
 ko.bindingHandlers.fadeVisible = visibility($.prototype.fadeIn, $.prototype.fadeOut);
 
-function visibility(show, hide, kind){
-    var handle = function(element, valueAccessor, allBindingsAccessor) {
-            var value = unwrap(valueAccessor()),
-                allBindings = allBindingsAccessor(),
-                speed = allBindings.speed || 400;
+function visibility(show, hide, kind) {
+    var handle = function (element, valueAccessor, allBindingsAccessor) {
+        var value = unwrap(valueAccessor()),
+            allBindings = allBindingsAccessor(),
+            speed = allBindings.speed || 400;
 
-            if (value) {
-                show.call($(element), speed);
-            }
-            else {
-                hide.call($(element), speed);
-            }
+        if (value) {
+            show.call($(element), speed);
+        }
+        else {
+            hide.call($(element), speed);
+        }
     };
 
     if (typeof kind === "undefined" || kind === "both") {
@@ -191,4 +411,5 @@ function visibility(show, hide, kind){
         return handle;
     }
 }
+
 
