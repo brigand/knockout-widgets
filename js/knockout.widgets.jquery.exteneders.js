@@ -58,9 +58,41 @@
 
         $el.trigger("mouseup");
 
-        $el.animate({
+        return $el.animate({
             left: newLeft
         }, speed);
     }
-})
-    (jQuery);
+
+    /**
+     * bind before all other handlers
+     * used to avoid some otherwise unavoidable conflicts internally
+     * jQuery recommends against this, because it uses an undocumented API
+     * it should be compatible with 1.4.8 through 2.0.X, but no garentee
+     * @param name The event to watch for, e.g., 'click'
+     * @param fn The callback function, works like any jQuery callback
+     * @returns {*}
+     */
+    $.fn.bindFirst = function(name, fn) {
+        var handlers;
+        // bind as you normally would
+        // don't want to miss out on any jQuery magic
+        this.bind(name, fn);
+
+        // Thanks to a comment by @Martin, adding support for
+        // namespaced events too.
+        if (typeof $._data === 'function') {
+            handlers = $._data(this, 'events')[name.split('.')[0]];
+        }
+        else {
+            handlers = this.data('events')[name.split('.')[0]];
+        }
+
+        // take out the handler we just inserted from the end
+        var handler = handlers.pop();
+
+        // move it to the beginning
+        handlers.splice(0, 0, handler);
+
+        return this;
+    };
+})(jQuery);

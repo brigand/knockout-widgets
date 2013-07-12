@@ -126,9 +126,6 @@ ko.bindingHandlers.slideSelect = {
                 lastValue = observable();
             }
         });
-
-        // Call update once to initialize it to the default scroll
-        ko.bindingHandlers.slideSelect.update.apply(null, args);
     },
     update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         var observable = valueAccessor(), value = unwrap(observable), bindings = allBindingsAccessor(),

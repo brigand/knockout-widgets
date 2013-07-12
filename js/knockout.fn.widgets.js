@@ -23,7 +23,7 @@ ko.debug = function(a, b, c, d){
 };
 
 
-ko.observable.fn.set = function(to){
+ko.subscribable.fn.set = function(to){
     var observable = this;
 
     return function(){
@@ -32,14 +32,14 @@ ko.observable.fn.set = function(to){
             ko.utils.unwrapObservable(to)
         );
     };
-}
+};
 
-ko.observable.fn.eq = function(to) {
+ko.subscribable.fn.eq = function(to) {
     var observable = this;
     return ko.computed(function(){
         return ko.utils.unwrapObservable(observable) === ko.utils.unwrapObservable(to);
     });
-}
+};
 
 ko.observableArray.fn.append = function(what) {
     var self = this;
@@ -55,3 +55,33 @@ ko.observableArray.fn.delete = function(what) {
     };
 };
 
+/**
+ * When this observable changes, we pretend the targets have too
+ * @param target an observable, array of observables, or object containing observables; observable arrays are not recursed
+ * @param maxDepth the maximum number of recursions, defaults to 3
+ * @param delay the number of miliseconds to wait before notifying the subscribers they've mutated
+ */
+ko.subscribable.fn.infulences = function(target, maxDepth, delay) {
+    var self = this;
+    if (arguments.length < 2) maxDepth = 3;
+
+    // Observable
+    if (ko.isObservable(target)){
+        if (typeof delay !== "undefined" && parseInt(delay)) {
+            self.subscribe(function(){
+                delay = parseInt(delay);
+                setTimeout(target.notifySubscribers.bind(target), delay)
+            });
+        } else {
+            self.subscribe(target.notifySubscribers.bind(target));
+        }
+    }
+    // Array or Object
+    else if (typeof target === 'object' && maxDepth > 0) {
+        $.each(target, function(index, t) {
+            self.infulences(t, maxDepth - 1);
+        });
+    }
+
+    return self;
+};
