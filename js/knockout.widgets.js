@@ -253,7 +253,7 @@ ko.bindingHandlers.file = {
         if (bindings.fileBinaryData && ko.isObservable(bindings.fileBinaryData)) {
             if (!file) {
                 bindings.fileBinaryData(null);
-            } else if (typeof FileReader !== "undefined") {
+            } else if (typeof FileReader === "function") {
                 var reader = new FileReader();
                 reader.onload = function(e) {
                     bindings.fileBinaryData(e.target.result);
@@ -262,13 +262,11 @@ ko.bindingHandlers.file = {
             }
         }
 
-        if (bindings.fileDataURL && ko.isObservable(bindings.fileDataURL)) {
-            if (!file) {
-                bindings.fileBinaryData(null);
-            } else if (typeof FileReader !== "undefined") {
+        if (bindings.fileDataURI && ko.isObservable(bindings.fileDataURI)) {
+            if (typeof FileReader === "function") {
                 var reader = new FileReader();
                 reader.onload = function(e) {
-                    bindings.fileBinaryData(e.target.result);
+                    bindings.fileDataURI(e.target.result);
                 };
                 reader.readAsDataURL(file);
             }
