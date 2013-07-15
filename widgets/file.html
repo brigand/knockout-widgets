@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Knockout-Widgets</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="../css/knockout.widgets.doc.css"/>
+</head>
+<body>
+<div class="container-fluid row-fluid">
+    <div class="span8 offset2">
+        <header>
+            <h1>File Widget</h1>
+        </header>
+
+        <div class="files"></div>
+        <form data-bind="submit: addFile">
+            <input type="file" name="file" id="file" data-bind="trigger: {click: openFileDialog}" />
+
+        </form>
+    </div>
+</div>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-interactions.min.js"></script>
+<script type="text/javascript" src="js/knockout-min.js"></script>
+<script type="text/javascript" src="js/knockout.widgets.jquery.exteneders.js"></script>
+<script type="text/javascript" src="js/knockout.fn.widgets.js"></script>
+<script type="text/javascript" src="js/knockout.util.widgets.js"></script>
+<script type="text/javascript" src="js/knockout.widgets.js"></script>
+<script type="text/javascript">
+    function ViewModel() {
+        var self = this;
+
+        self.openFileDialog = ko.observable(false);
+    }
+
+    ko.applyBindings(window.app = new ViewModel());
+</script>
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+</body>
+</html>

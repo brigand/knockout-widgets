@@ -303,7 +303,7 @@ ko.bindingHandlers.slideSelect = {
 
                 // Number values will recieve the index of the selected node
                 if (typeof value === "number") {
-                    $.each(selected.parentNode.children, function(index, node) {
+                    ko.utils.objectForEach(selected.parentNode.children, function(index, node) {
                         if (node === selected) {
                             selectedData = index;
                         }
@@ -380,6 +380,90 @@ ko.bindingHandlers.slideSelect = {
         }
         else {
             console.warn("slideSelect couldn't focus a child element");
+        }
+    }
+};
+
+
+ko.bindingHandlers.trigger = {
+    init: function(element, valueAccessor, allBindingsAccessor) {
+
+    },
+
+    update: function(element, valueAccessor, allBindingsAccessor) {
+        var value = valueAccessor(), $element = $(element);
+
+        ko.utils.objectForEach(value, function(event, observable){
+            if (observable()) {
+                $element.trigger(event);
+                observable(false);
+            }
+        });
+    }
+};
+
+
+ko.bindingHandlers.fileDrop = {
+    init: function(element, valueAccessor, allBindingsAccessor) {
+
+    },
+
+    update: function(element, valueAccessor, allBindingsAccessor) {
+
+    }
+};
+
+/* Modifided version of this: https://github.com/khayrov/khayrov.github.com/blob/master/jsfiddle/knockout-fileapi/ko_file.js */
+ko.bindingHandlers.file = {
+    init: function(element, valueAccessor) {
+        $(element).change(function() {
+            var file = this.files[0];
+            if (ko.isObservable(valueAccessor())) {
+                valueAccessor()(file);
+            }
+        });
+    },
+
+    update: function(element, valueAccessor, allBindingsAccessor) {
+        var file = ko.utils.unwrapObservable(valueAccessor());
+        var bindings = allBindingsAccessor();
+        var windowURL = window.URL || window.webkitURL;
+
+        if (bindings.fileObjectURL && ko.isObservable(bindings.fileObjectURL)) {
+            if (typeof windowURL !== "undefined") {
+                var oldUrl = bindings.fileObjectURL();
+                if (oldUrl) {
+                    windowURL.revokeObjectURL(oldUrl);
+                }
+                bindings.fileObjectURL(file && windowURL.createObjectURL(file));
+            }
+            else {
+                bindings.fileObjectURL(null);
+            }
+        }
+
+        if (bindings.fileBinaryData && ko.isObservable(bindings.fileBinaryData)) {
+            if (!file) {
+                bindings.fileBinaryData(null);
+            } else if (typeof FileReader !== "undefined") {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    bindings.fileBinaryData(e.target.result);
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        if (bindings.fileDataURL && ko.isObservable(bindings.fileDataURL)) {
+            if (!file) {
+                bindings.fileBinaryData(null);
+            } else if (typeof FileReader !== "undefined") {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    bindings.fileBinaryData(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
         }
     }
 };

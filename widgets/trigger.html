@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Knockout-Widgets</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="../css/knockout.widgets.doc.css"/>
+</head>
+<body>
+<div class="container-fluid row-fluid">
+    <div class="span8 offset2">
+        <header>
+            <h1>Trigger Binding</h1>
+        </header>
+
+        <div>
+            The trigger binding causes an event on the element, when the observable is set to a true value.
+            The observable is then reset to false.
+        </div>
+
+        <div>
+            <h3>Syntax</h3>
+            <code>trigger: {eventName: observable}</code>
+
+            <h3>Code Example</h3>
+            <code>&lt;a data-bind="trigger: {click: causeClickEvent}" href="#linkwaspressed">The Target&lt;/a> <br>
+                &lt;button data-bind="click: causeClickEvent.set(true)">Pressing Me is Like Clicking That&lt;/button>
+            </code>
+        </div>
+
+        <h3>Live Example</h3>
+
+        <div class="row-fluid">
+            <a class="btn span3 text-center" data-bind="trigger: {click: causeClickEvent}" href="#linkwaspressed">The
+                Target</a>
+            <code class="span6 offset2">The hash is: <span data-bind="text: hash"></span></code>
+        </div>
+        <div class="row-fluid">
+            <button class="btn btn-block btn-primary" data-bind="click: causeClickEvent.set(true)">Pressing Me is Like
+                Clicking That
+            </button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="../js/jquery.min.js"></script>
+<script type="text/javascript" src="../js/jquery-ui-interactions.min.js"></script>
+<script type="text/javascript" src="../js/knockout-min.js"></script>
+<script type="text/javascript" src="../js/knockout.widgets.jquery.exteneders.js"></script>
+<script type="text/javascript" src="../js/knockout.fn.widgets.js"></script>
+<script type="text/javascript" src="../js/knockout.util.widgets.js"></script>
+<script type="text/javascript" src="../js/knockout.widgets.js"></script>
+<script type="text/javascript">
+    function ViewModel() {
+        var self = this;
+
+        self.causeClickEvent = ko.observable(false);
+
+        self.hash = ko.computed(function () {
+            // subscribe, so we're notified
+            self.causeClickEvent();
+
+            return window.location.hash;
+        });
+    }
+
+    ko.applyBindings(window.app = new ViewModel());
+</script>
+<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+</body>
+</html>
